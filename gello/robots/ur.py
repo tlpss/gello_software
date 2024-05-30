@@ -122,7 +122,7 @@ class URRobot(Robot):
 
 
 def main():
-    robot_ip = "192.168.1.11"
+    robot_ip = "10.42.0.163"
     ur = URRobot(robot_ip, no_gripper=True)
     print(ur)
     ur.set_freedrive_mode(True)

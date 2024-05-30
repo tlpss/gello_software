@@ -125,7 +125,7 @@ def main(args):
             curr_joints = env.get_obs()["joint_positions"]
             if reset_joints.shape == curr_joints.shape:
                 max_delta = (np.abs(curr_joints - reset_joints)).max()
-                steps = min(int(max_delta / 0.01), 100)
+                steps = min(int(max_delta / 0.001), 100)
 
                 for jnt in np.linspace(curr_joints, reset_joints, steps):
                     env.step(jnt)
