@@ -15,3 +15,8 @@ xarm
 xarm-python-sdk
 numpy-quaternion
 termcolor
+
+-e airo-mono/airo-typing
+-e airo-mono/airo-spatial-algebra
+-e airo-mono/airo-dataset-tools
+

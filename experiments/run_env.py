@@ -14,6 +14,7 @@ from gello.data_utils.format_obs import save_frame
 from gello.env import RobotEnv
 from gello.robots.robot import PrintRobot
 from gello.zmq_core.robot_node import ZMQClientRobot
+from gello.zmq_core.camera_node import ZMQClientCamera
 
 
 def print_color(*args, color=None, attrs=(), **kwargs):
@@ -26,21 +27,22 @@ def print_color(*args, color=None, attrs=(), **kwargs):
 
 @dataclass
 class Args:
-    agent: str = "none"
+    agent: str = "gello"
     robot_port: int = 6001
     wrist_camera_port: int = 5000
     base_camera_port: int = 5001
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
-    hz: int = 100
+    hz: int = 10
     start_joints: Optional[Tuple[float, ...]] = None
 
     gello_port: Optional[str] = None
     mock: bool = False
-    use_save_interface: bool = False
-    data_dir: str = "~/bc_data"
+    use_save_interface: bool = True
+    data_dir: str = "~/bc_data/planar_push"
     bimanual: bool = False
     verbose: bool = False
+    no_gripper: bool = False
 
 
 def main(args):
@@ -50,12 +52,13 @@ def main(args):
     else:
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
-            # "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+            "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
+            "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
+        #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
     env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
-
+    print("Robot initialized, env created")
     if args.bimanual:
         if args.agent == "gello":
             # dynamixel control box port map (to distinguish left and right gello)
@@ -96,6 +99,7 @@ def main(args):
         reset_joints_left = np.deg2rad([0, -90, -90, -90, 90, 0, 0])
         reset_joints_right = np.deg2rad([0, -90, 90, -90, -90, 0, 0])
         reset_joints = np.concatenate([reset_joints_left, reset_joints_right])
+
         curr_joints = env.get_obs()["joint_positions"]
         max_delta = (np.abs(curr_joints - reset_joints)).max()
         steps = min(int(max_delta / 0.01), 100)
@@ -119,9 +123,14 @@ def main(args):
                 reset_joints = np.deg2rad(
                     [0, -90, 90, -90, -90, 0, 0]
                 )  # Change this to your own reset joints
+
+                if args.no_gripper:
+                    reset_joints = reset_joints[:-1]
             else:
                 reset_joints = args.start_joints
             agent = GelloAgent(port=gello_port, start_joints=args.start_joints)
+
+            print("getting current joints")
             curr_joints = env.get_obs()["joint_positions"]
             if reset_joints.shape == curr_joints.shape:
                 max_delta = (np.abs(curr_joints - reset_joints)).max()
@@ -145,9 +154,18 @@ def main(args):
         else:
             raise ValueError("Invalid agent name")
 
+    if args.use_save_interface:
+        from gello.data_utils.keyboard_interface import KBReset
+
+        kb_interface = KBReset()
+
+
     # going to start position
     print("Going to start position")
     start_pos = agent.act(env.get_obs())
+    if args.no_gripper:
+        start_pos = start_pos[:-1]
+
     obs = env.get_obs()
     joints = obs["joint_positions"]
 
@@ -175,20 +193,26 @@ def main(args):
         joints
     ), f"agent output dim = {len(start_pos)}, but env dim = {len(joints)}"
 
-    max_delta = 0.05
+    max_delta = 1/args.hz
     for _ in range(25):
         obs = env.get_obs()
         command_joints = agent.act(obs)
+        if args.no_gripper:
+            command_joints = command_joints[:-1]
         current_joints = obs["joint_positions"]
         delta = command_joints - current_joints
         max_joint_delta = np.abs(delta).max()
         if max_joint_delta > max_delta:
             delta = delta / max_joint_delta * max_delta
         env.step(current_joints + delta)
+        
+    
 
     obs = env.get_obs()
     joints = obs["joint_positions"]
     action = agent.act(obs)
+    if args.no_gripper:
+        action = action[:-1]
     if (action - joints > 0.5).any():
         print("Action is too big")
 
@@ -200,15 +224,18 @@ def main(args):
             )
         exit()
 
-    if args.use_save_interface:
-        from gello.data_utils.keyboard_interface import KBReset
-
-        kb_interface = KBReset()
 
     print_color("\nStart 🚀🚀🚀", color="green", attrs=("bold",))
 
     save_path = None
     start_time = time.time()
+
+
+    # safety controller 
+    from gello.safety_controller import URPlanarSafetyController
+
+    safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
+
     while True:
         num = time.time() - start_time
         message = f"\rTime passed: {round(num, 2)}          "
@@ -220,6 +247,15 @@ def main(args):
             flush=True,
         )
         action = agent.act(obs)
+        if args.no_gripper:
+            action = action[:-1]
+
+        # safety controller
+        old_action = action.copy()
+        action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
+        print(f"{old_action} -> {action}")
+        # safety controller 
+
         dt = datetime.datetime.now()
         if args.use_save_interface:
             state = kb_interface.update()

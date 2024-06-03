@@ -58,13 +58,24 @@ class URRobot(Robot):
         Returns:
             T: The current state of the leader robot.
         """
-        robot_joints = self.r_inter.getActualQ()
+        robot_joints = np.array(self.r_inter.getActualQ())
         if self._use_gripper:
             gripper_pos = self._get_gripper_pos()
             pos = np.append(robot_joints, gripper_pos)
         else:
             pos = robot_joints
         return pos
+
+    
+    def get_tcp_pose(self) -> np.ndarray:
+        tcp_pose_rotvec = self.r_inter.getActualTCPPose()
+        return tcp_pose_rotvec
+
+    
+    def get_FT_readings(self) -> np.ndarray:
+        wrench = self.r_inter.getActualTCPForce()
+        return wrench
+
 
     def command_joint_state(self, joint_state: np.ndarray) -> None:
         """Command the leader robot to a given state.
@@ -111,18 +122,21 @@ class URRobot(Robot):
 
     def get_observations(self) -> Dict[str, np.ndarray]:
         joints = self.get_joint_state()
-        pos_quat = np.zeros(7)
+        pos_quat = self.get_tcp_pose()
         gripper_pos = np.array([joints[-1]])
+        wrench = self.get_FT_readings()
+
+
         return {
             "joint_positions": joints,
-            "joint_velocities": joints,
-            "ee_pos_quat": pos_quat,
+            "tcp_pose_quat": pos_quat,
             "gripper_position": gripper_pos,
+            "wrench": wrench
         }
 
-
 def main():
-    robot_ip = "10.42.0.163"
+
+    robot_ip = "10.42.0.162"
     ur = URRobot(robot_ip, no_gripper=True)
     print(ur)
     ur.set_freedrive_mode(True)

@@ -118,6 +118,6 @@ if __name__ == "__main__":
     device_ids = get_device_ids()
     print(f"Found {len(device_ids)} devices")
     print(device_ids)
-    rs = RealSenseCamera(flip=True, device_id=device_ids[0])
+    rs = RealSenseCamera(flip=False, device_id=device_ids[0])
     im, depth = rs.read()
     _debug_read(rs, save_datastream=True)
