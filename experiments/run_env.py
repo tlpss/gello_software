@@ -38,7 +38,7 @@ class Args:
 
     gello_port: Optional[str] = None
     mock: bool = False
-    use_save_interface: bool = True
+    use_save_interface: bool = False
     data_dir: str = "~/bc_data/planar_push"
     bimanual: bool = False
     verbose: bool = False
@@ -150,7 +150,12 @@ def main(args):
         elif args.agent == "dummy" or args.agent == "none":
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
         elif args.agent == "policy":
-            raise NotImplementedError("add your imitation policy here if there is one")
+            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy
+
+            #TODO: make checkpoint path an argument.
+            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/gello-planar-push-last"
+            policy = load_act_policy(checkpoint_path)
+            agent = LeRobotAgent(policy)
         else:
             raise ValueError("Invalid agent name")
 
@@ -253,7 +258,7 @@ def main(args):
         # safety controller
         old_action = action.copy()
         action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
-        print(f"{old_action} -> {action}")
+        #print(f"{old_action} -> {action}")
         # safety controller 
 
         dt = datetime.datetime.now()
