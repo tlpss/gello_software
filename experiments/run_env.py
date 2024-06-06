@@ -180,7 +180,6 @@ def main(args):
     max_joint_delta = 0.8
     if abs_deltas[id_max_joint_delta] > max_joint_delta:
         id_mask = abs_deltas > max_joint_delta
-        print()
         ids = np.arange(len(id_mask))[id_mask]
         for i, delta, joint, current_j in zip(
             ids,

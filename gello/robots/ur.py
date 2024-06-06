@@ -121,18 +121,20 @@ class URRobot(Robot):
             self.robot.endFreedriveMode()
 
     def get_observations(self) -> Dict[str, np.ndarray]:
-        joints = self.get_joint_state()
+        joints = self.get_joint_state()[:6]
         pos_quat = self.get_tcp_pose()
-        gripper_pos = np.array([joints[-1]])
         wrench = self.get_FT_readings()
 
 
-        return {
+        obs_dict = {
             "joint_positions": joints,
-            "tcp_pose_quat": pos_quat,
-            "gripper_position": gripper_pos,
+            "tcp_pose_rotvec": pos_quat,
             "wrench": wrench
         }
+
+        if self._use_gripper:
+            gripper_pos = np.array(self.get_joint_state()[-1])
+            obs_dict["gripper_position"] = gripper_pos
 
 def main():
 
