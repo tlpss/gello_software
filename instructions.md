@@ -31,16 +31,23 @@ python scripts/gello_get_offset.py --start-joints 0 -1.57 1.57 -1.57 -1.57 0 --j
 - activate the gripper
 
 
-open 2 terminals, activate conda `gello` env in both.
+open 3 terminals and activate `gello-pt` conda env 
 
-# first command
-python experiments/launch_nodes.py --robot=ur (sim_ur)
+from dir `~/Code/gello_software`:
+
+1. start up cameras: `python experiments/launch_camera_nodes.py`
+2. start robot: `python experiments/launch_nodes.py`
+3. start 'agent': `python experiments/run_env.py  --agent=policy` or `python experiments/run_env.py  --agent=gello`
+
+to capture demonstrations:
+
+- use_save_interface & set data dir  in `experiments/run_env.py`
+- pygame window will pop up, press S tot start, Q to finish
+- to visualize saved pickles: `data_utils/explore_pickle.ipynb` 
 
 
+to add sensor:
+- in robots/ur/get_observation: add entry to observation dictionary (np.array)
 
-# second command
-first hold the gello arm in the 'home' position, then start the position mimicking using the following command:
-
-python experiments/run_env.py --agent=gello
-
-
+pygame state machine:  data_utils/keyboard_interface
+experiments/run_env.py

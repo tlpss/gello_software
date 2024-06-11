@@ -38,8 +38,8 @@ class Args:
 
     gello_port: Optional[str] = None
     mock: bool = False
-    use_save_interface: bool = False
-    data_dir: str = "~/bc_data/planar_push"
+    use_save_interface: bool = True
+    data_dir: str = "~/bc_data/coffee-handle"
     bimanual: bool = False
     verbose: bool = False
     no_gripper: bool = False
@@ -173,7 +173,6 @@ def main(args):
 
     obs = env.get_obs()
     joints = obs["joint_positions"]
-
     abs_deltas = np.abs(start_pos - joints)
     id_max_joint_delta = np.argmax(abs_deltas)
 
@@ -236,9 +235,10 @@ def main(args):
 
 
     # safety controller 
-    from gello.safety_controller import URPlanarSafetyController
+    from gello.safety_controller import URPlanarSafetyController, URTableSafetyController
 
-    safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
+    #safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
+    safety_controller = URTableSafetyController(tcp_z_offset=0.193)
 
     while True:
         num = time.time() - start_time
@@ -256,8 +256,7 @@ def main(args):
 
         # safety controller
         old_action = action.copy()
-        action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
-        #print(f"{old_action} -> {action}")
+        # action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
         # safety controller 
 
         dt = datetime.datetime.now()
@@ -279,7 +278,7 @@ def main(args):
                 save_path = None
             else:
                 raise ValueError(f"Invalid state {state}")
-        obs = env.step(action)
+        obs = env.step(action)  # execute action
 
 
 if __name__ == "__main__":

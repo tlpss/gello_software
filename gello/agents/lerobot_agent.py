@@ -28,7 +28,7 @@ class LeRobotAgent(Agent):
         joint_positions = obs["joint_positions"]
         gripper_position = obs["gripper_position"]
 
-        state = torch.tensor([*joint_positions, *gripper_position]).unsqueeze(0).float()
+        state = torch.tensor([*joint_positions, gripper_position]).unsqueeze(0).float()
 
         # format to torch tensors
         base_image = torch.tensor(base_image).permute(2, 0, 1).unsqueeze(0).float() / 255
@@ -43,10 +43,10 @@ class LeRobotAgent(Agent):
         action = self.policy.select_action(formatted_obs)
 
         action = action.squeeze().detach().numpy()
-        print(action.shape)
 
-        # append gripper position dummy if the gripper was not controlled by the policy
-        action = np.append(action, 0.0)
+        # append gripper position dummy if the gripper was not controlled by the policy (output dim = 6)
+        if len(action) == 6:
+            action = np.append(action, 0.0)
         
         return action
     

@@ -10,6 +10,29 @@ class SafetyController:
     def __call__(self, target_joint_angles:np.ndarray, current_joint_angles: np.ndarray, **kwargs) -> np.ndarray:
         raise NotImplementedError
     
+class URTableSafetyController:
+    # safety controller to keep z coord above 1.0 cm
+
+    def __init__(self, z_min=0.01, tcp_z_offset=0.176):
+        self.z_min = z_min
+        self.tcp_offset = np.array([0,0,tcp_z_offset])
+        self.tcp_in_eef = np.eye(4)
+        self.tcp_in_eef[:3,3] = self.tcp_offset
+
+    def __call__(self, target_joint_angles:np.ndarray, current_joint_angles: np.ndarray, **kwargs) -> np.ndarray:
+        from ur_analytic_ik import ur5e
+
+        target_eef_pose = ur5e.forward_kinematics(*target_joint_angles)
+
+        target_tcp_pose = target_eef_pose @ self.tcp_in_eef
+
+        target_tcp_pose[2][3] = np.clip(target_tcp_pose[2][3], self.z_min, np.inf)
+
+        target_eef_pose = target_tcp_pose @ np.linalg.inv(self.tcp_in_eef)
+        target_joint_angles = ur5e.inverse_kinematics_closest(target_eef_pose, *current_joint_angles)
+
+        return target_joint_angles[0][0]
+
 
 
 class URPlanarSafetyController:
@@ -57,7 +80,7 @@ class URPlanarSafetyController:
 
 if __name__ == "__main__":
     pass
-    safety_controller = URPlanarSafetyController(x_min=0.3, x_max=0.7, y_min=-0.3, y_max=0.3, z=0.5)
+    safety_controller = URTableSafetyController()
     target_joint_angles = np.array([0,0,0,0,0,0])
     current_joint_angles = np.array([0,0,0,0,0,0])
     print(safety_controller(target_joint_angles, current_joint_angles))
