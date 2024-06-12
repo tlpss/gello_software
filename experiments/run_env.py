@@ -276,6 +276,8 @@ def main(args):
                 save_frame(save_path, dt, obs, action)
             elif state == "normal":
                 save_path = None
+            elif state == "pause":
+                continue  # skip executing the action
             else:
                 raise ValueError(f"Invalid state {state}")
         obs = env.step(action)  # execute action
