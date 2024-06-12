@@ -130,8 +130,8 @@ def main(args):
                 reset_joints = args.start_joints
             agent = GelloAgent(port=gello_port, start_joints=args.start_joints)
 
-            print("getting current joints")
-            curr_joints = env.get_obs()["joint_positions"]
+            print("-Getting observation for current joints")
+            curr_joints = env.get_obs_DEBUG()["joint_positions"]
             if reset_joints.shape == curr_joints.shape:
                 max_delta = (np.abs(curr_joints - reset_joints)).max()
                 steps = min(int(max_delta / 0.001), 100)
@@ -235,10 +235,10 @@ def main(args):
 
 
     # safety controller 
-    from gello.safety_controller import URPlanarSafetyController, URTableSafetyController
+    from gello.safety_controller import URTableSimpleSafetyController
 
     #safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
-    safety_controller = URTableSafetyController(tcp_z_offset=0.193)
+    safety_controller = URTableSimpleSafetyController(z_min=0.03, tcp_z_offset=0.193)
 
     while True:
         num = time.time() - start_time
@@ -256,7 +256,7 @@ def main(args):
 
         # safety controller
         old_action = action.copy()
-        # action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
+        action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
         # safety controller 
 
         dt = datetime.datetime.now()
