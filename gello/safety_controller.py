@@ -10,10 +10,12 @@ class SafetyController:
     def __call__(self, target_joint_angles:np.ndarray, current_joint_angles: np.ndarray, **kwargs) -> np.ndarray:
         raise NotImplementedError
     
+
 class URTableSafetyController:
     # safety controller to keep z coord above 1.0 cm
+    # TODO: currently unstable, possibly due to usage of forward/inverse kinematics
 
-    def __init__(self, z_min=0.01, tcp_z_offset=0.176):
+    def __init__(self, z_min=0.1, tcp_z_offset=0.196):
         self.z_min = z_min
         self.tcp_offset = np.array([0,0,tcp_z_offset])
         self.tcp_in_eef = np.eye(4)
@@ -23,6 +25,7 @@ class URTableSafetyController:
         from ur_analytic_ik import ur5e
 
         target_eef_pose = ur5e.forward_kinematics(*target_joint_angles)
+        #print(f"------target_eef_pose:\n {target_eef_pose}")
 
         target_tcp_pose = target_eef_pose @ self.tcp_in_eef
 
@@ -33,6 +36,35 @@ class URTableSafetyController:
 
         return target_joint_angles[0][0]
 
+
+class URTableSimpleSafetyController:
+    # safety controller to keep z coord above 1.0 cm
+
+    def __init__(self, z_min=0.01, tcp_z_offset=0.196):
+        self.z_min = z_min
+        self.tcp_offset = np.array([0,0,tcp_z_offset])
+        self.tcp_in_eef = np.eye(4)
+        self.tcp_in_eef[:3,3] = self.tcp_offset
+        self.outside_bounds = False
+
+    def __call__(self, target_joint_angles:np.ndarray, current_joint_angles: np.ndarray, **kwargs) -> np.ndarray:
+        from ur_analytic_ik import ur5e
+
+        target_eef_pose = ur5e.forward_kinematics(*target_joint_angles)
+
+        target_tcp_pose = target_eef_pose @ self.tcp_in_eef
+
+        z = target_tcp_pose[2][3]
+        if z < self.z_min:
+            if self.outside_bounds == False:
+                self.outside_bounds = True
+                print(f"URTableSimpleSafetyController: Z coord below {self.z_min}, stopping movements.")
+            return current_joint_angles
+        else:
+            if self.outside_bounds == True:
+                self.outside_bounds = False
+                print(f"URTableSimpleSafetyController: back inside safety region, resuming...")
+            return target_joint_angles
 
 
 class URPlanarSafetyController:
@@ -72,7 +104,6 @@ class URPlanarSafetyController:
         delta = target_joint_angles - current_joint_angles
         delta = np.clip(delta, -max_delta, max_delta)
         target_joint_angles = current_joint_angles + delta
-
 
         return target_joint_angles
     
