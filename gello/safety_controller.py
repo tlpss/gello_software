@@ -64,6 +64,13 @@ class URTableSimpleSafetyController:
             if self.outside_bounds == True:
                 self.outside_bounds = False
                 print(f"URTableSimpleSafetyController: back inside safety region, resuming...")
+        
+                # clip target joints for max velocity.
+            max_delta = 0.2 # 2 rad/s
+            delta = target_joint_angles - current_joint_angles
+            delta = np.clip(delta, -max_delta, max_delta)
+            target_joint_angles = current_joint_angles + delta
+            
             return target_joint_angles
 
 

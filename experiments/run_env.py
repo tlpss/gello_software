@@ -150,12 +150,16 @@ def main(args):
         elif args.agent == "dummy" or args.agent == "none":
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
         elif args.agent == "policy":
-            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy
+            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy, LeRobotTactileAgent
 
-            #TODO: make checkpoint path an argument.
-            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/gello-planar-push-last"
+            #
+            # checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-no-tactile/checkpoints/030000/pretrained_model/"
+            # policy = load_act_policy(checkpoint_path)
+            # agent = LeRobotAgent(policy)
+
+            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-tactile/checkpoints/040000/pretrained_model/"
             policy = load_act_policy(checkpoint_path)
-            agent = LeRobotAgent(policy)
+            agent = LeRobotTactileAgent(policy)
         else:
             raise ValueError("Invalid agent name")
 
@@ -177,7 +181,8 @@ def main(args):
     id_max_joint_delta = np.argmax(abs_deltas)
 
     max_joint_delta = 0.8
-    if abs_deltas[id_max_joint_delta] > max_joint_delta:
+    if (abs_deltas[id_max_joint_delta] > max_joint_delta) and args.agent == "gello":
+        print("current joints are too far from the start position!")
         id_mask = abs_deltas > max_joint_delta
         ids = np.arange(len(id_mask))[id_mask]
         for i, delta, joint, current_j in zip(
