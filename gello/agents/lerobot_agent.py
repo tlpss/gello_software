@@ -80,6 +80,9 @@ class LeRobotTactileAgent(Agent):
         fingertips = obs["fingertips"]
         accelerometer = obs["accelerometer"]
 
+        # fingertips = np.random.randint(25,35,(32,))
+        # fingertips = [16, 35, 40, 34, 31, 15, 39, 38, 44, 8, 22, 35, 49, 38, 11, 26, 33, 28, 6, 24, 27, 28, 25, 30, 32, 26, 26, 27, 31, 28, 18, 24]
+        # accelerometer = 0
 
         # already contains the gripper position
         state = np.concatenate([joint_positions, fingertips, [accelerometer]], axis=0)
