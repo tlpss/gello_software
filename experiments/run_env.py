@@ -157,7 +157,7 @@ def main(args):
             # policy = load_act_policy(checkpoint_path)
             # agent = LeRobotAgent(policy)
 
-            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-tactile/checkpoints/040000/pretrained_model/"
+            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
             policy = load_act_policy(checkpoint_path)
             agent = LeRobotTactileAgent(policy)
         else:
@@ -221,7 +221,7 @@ def main(args):
     action = agent.act(obs)
     if args.no_gripper:
         action = action[:-1]
-    if (action - joints > 0.5).any():
+    if (action - joints > 0.5).any() and args.agent == "gello":
         print("Action is too big")
 
         # print which joints are too big
