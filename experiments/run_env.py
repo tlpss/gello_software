@@ -52,8 +52,8 @@ def main(args):
     else:
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
-            "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+            # "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
+            # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
         #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
@@ -62,8 +62,8 @@ def main(args):
     if args.bimanual:
         if args.agent == "gello":
             # dynamixel control box port map (to distinguish left and right gello)
-            right = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT7WBG6A-if00-port0"
-            left = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT7WBEIA-if00-port0"
+            right = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0"
+            left = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792AL6-if00-port0"
             left_agent = GelloAgent(port=left)
             right_agent = GelloAgent(port=right)
             agent = BimanualAgent(left_agent, right_agent)
@@ -96,7 +96,7 @@ def main(args):
 
         # System setup specific. This reset configuration works well on our setup. If you are mounting the robot
         # differently, you need a separate reset joint configuration.
-        reset_joints_left = np.deg2rad([0, -90, -90, -90, 90, 0, 0])
+        reset_joints_left = np.deg2rad([-90, -90, -90, -90, 90, 0, 0])
         reset_joints_right = np.deg2rad([0, -90, 90, -90, -90, 0, 0])
         reset_joints = np.concatenate([reset_joints_left, reset_joints_right])
 
@@ -157,7 +157,7 @@ def main(args):
             # policy = load_act_policy(checkpoint_path)
             # agent = LeRobotAgent(policy)
 
-            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
+            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-outputs/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
             policy = load_act_policy(checkpoint_path)
             agent = LeRobotTactileAgent(policy)
         else:
@@ -243,7 +243,7 @@ def main(args):
     from gello.safety_controller import URTableSimpleSafetyController
 
     #safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
-    safety_controller = URTableSimpleSafetyController(z_min=0.03, tcp_z_offset=0.193)
+    safety_controller = URTableSimpleSafetyController(z_min=0.0, tcp_z_offset=0.172)
 
     while True:
         num = time.time() - start_time
@@ -262,6 +262,8 @@ def main(args):
         # safety controller
         old_action = action.copy()
         action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
+        if args.bimanual:
+            action[7:13] = safety_controller(action[7:13],obs["joint_positions"][7:13])
         # safety controller 
 
         dt = datetime.datetime.now()

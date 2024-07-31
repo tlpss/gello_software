@@ -20,9 +20,19 @@
 - we assume the starting pose is the 90 90 90 90 config from gello
 - calibrate the motor offsets for the dynamixels using 
 
+
+right gello arm
 ```
 python scripts/gello_get_offset.py --start-joints 0 -1.57 1.57 -1.57 -1.57 0 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0
+
 ```
+
+left arm 
+```
+python scripts/gello_get_offset.py --start-joints -1.57 -1.57 -1.57 -1.57 1.57 0 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792AL6-if00-port0
+```
+
+these values should then be configured in the agents/gello_agent script.
 - 
 ## runnning teleop
 - start up the robot, initialize and start (brakes should make noise)
@@ -31,6 +41,7 @@ python scripts/gello_get_offset.py --start-joints 0 -1.57 1.57 -1.57 -1.57 0 --j
 - activate the gripper
 
 
+### single robot arm
 open 3 terminals and activate `gello-pt` conda env 
 
 from dir `~/Code/gello_software`:
@@ -38,6 +49,13 @@ from dir `~/Code/gello_software`:
 1. start up cameras: `python experiments/launch_camera_nodes.py`
 2. start robot: `python experiments/launch_nodes.py`
 3. start 'agent': `python experiments/run_env.py  --agent=policy` or `python experiments/run_env.py  --agent=gello`
+
+
+### dual UR robot arm
+1. start up cameras: ` python experiments/launch_nodes.py --robot bimanual_ur`
+2. start robot: `python experiments/launch_nodes.py`
+3. start 'agent': `python experiments/run_env.py  --agent=policy` or `python experiments/run_env.py  --agent=gello`
+
 
 to capture demonstrations:
 
