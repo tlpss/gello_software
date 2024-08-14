@@ -17,7 +17,18 @@
 
 - make sure the robot ip is correct (and the robot is in remote control)
 
-- we assume the starting pose is the 90 90 90 90 config from gello
+### cameras
+To change the used camera's:
+1.  Edit `camera_configs` in `launch_camera_nodes.py`
+2.  Edit the ports in `launch_camera_clients.py`
+3.  Edit `camera_clients` in `run_env.py` 
+
+
+### starting pose
+
+to configure the starting poses of the robots, you have to set them in 
+
+
 - calibrate the motor offsets for the dynamixels using 
 
 

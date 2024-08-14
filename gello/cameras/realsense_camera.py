@@ -24,7 +24,7 @@ def get_device_ids() -> List[str]:
 class RealSenseCamera(CameraDriver):
     def __repr__(self) -> str:
         return f"RealSenseCamera(device_id={self._device_id})"
-
+    
     def __init__(self, device_id: Optional[str] = None, flip: bool = False):
         self.camera = Realsense(fps=30,resolution=(640,480),serial_number=device_id)
         self._flip = flip
