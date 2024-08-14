@@ -26,7 +26,7 @@ class RealSenseCamera(CameraDriver):
         return f"RealSenseCamera(device_id={self._device_id})"
     
     def __init__(self, device_id: Optional[str] = None, flip: bool = False):
-        self.camera = Realsense(fps=30,resolution=(640,480),serial_number=device_id)
+        self.camera = Realsense(fps=15,resolution=(640,480),serial_number=device_id)
         self._flip = flip
         self._device_id = device_id
 
@@ -45,8 +45,8 @@ class RealSenseCamera(CameraDriver):
             np.ndarray: The depth image, shape=(H, W, 1)
         """
         import cv2
-        depth_image = self.camera.retrieve_depth_image()[..., 0]
         color_image = self.camera.retrieve_rgb_image_as_int()
+        depth_image = self.camera.retrieve_depth_image()[..., 0]
         # depth_image = cv2.convertScaleAbs(depth_image, alpha=0.03)
         if img_size is None:
             image = color_image
@@ -163,7 +163,7 @@ class Realsense:
         return image * self.depth_factor
 
     def retrieve_depth_image(self):
-        self._grab_images()
+        #self._grab_images()
         frame = self._depth_frame
         frame_colorized = self.colorizer.colorize(frame)
         image = np.asanyarray(frame_colorized.get_data())  # this is uint8 with 3 channels

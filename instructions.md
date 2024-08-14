@@ -34,13 +34,13 @@ to configure the starting poses of the robots, you have to set them in
 
 right gello arm
 ```
-python scripts/gello_get_offset.py --start-joints 0 -1.57 1.57 -1.57 -1.57 0 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0
+python scripts/gello_get_offset.py --start-joints -1.57 -1.57 -1.57 -1.57 1.57 1.57 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0
 
 ```
 
 left arm 
 ```
-python scripts/gello_get_offset.py --start-joints -1.57 -1.57 -1.57 -1.57 1.57 0 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792AL6-if00-port0
+python scripts/gello_get_offset.py --start-joints 1.57 -1.57 1.57 -1.57 -1.57 -1.57 --joint-signs 1 1 -1 1 1 1 --port /dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792AL6-if00-port0
 ```
 
 these values should then be configured in the agents/gello_agent script.
@@ -63,9 +63,9 @@ from dir `~/Code/gello_software`:
 
 
 ### dual UR robot arm
-1. start up cameras: ` python experiments/launch_nodes.py --robot bimanual_ur`
-2. start robot: `python experiments/launch_nodes.py`
-3. start 'agent': `python experiments/run_env.py  --agent=policy` or `python experiments/run_env.py  --agent=gello`
+1. start up cameras: `python experiments/launch_camera_nodes.py`
+2. start robot: ` python experiments/launch_nodes.py --robot bimanual_ur`
+3. start 'agent': `python experiments/run_env.py  --agent=policy --bimanual` or `python experiments/run_env.py  --agent=gello --bimanual`
 
 
 to capture demonstrations:
