@@ -44,18 +44,23 @@ class URRobot(Robot):
         self._use_gripper = not no_gripper
 
         # Sensor readers
-        # qos = dds.qos.Qos()
-        # # qos.history.kind = dds.HistoryKind.KEEP_LAST
-        # # qos.history.depth = 1
-        # irtouch32_listener = LivelinessListener(topic_name="IRTouch32")
-        # irtouch32_domain_participant = DomainParticipant()
-        # irtouch32_topic = Topic(irtouch32_domain_participant, "IRTouch32", IRTouch32)
-        # self.irtouch32_reader = DataReader(irtouch32_domain_participant, irtouch32_topic, listener=irtouch32_listener, qos=qos)
+        qos = dds.qos.Qos()
+        # qos.history.kind = dds.HistoryKind.KEEP_LAST
+        # qos.history.depth = 1
+        mic_frame_listener = LivelinessListener(topic_name="MicManipFrame")
+        mic_frame_domain_participant = DomainParticipant()
+        mic_frame_topic = Topic(mic_frame_domain_participant, "MicManipFrame", Sequence)
+        self.mic_frame_reader = DataReader(mic_frame_domain_participant, mic_frame_topic, listener=mic_frame_listener, qos=qos)
 
-        # accelnet_listener = LivelinessListener(topic_name="AccelNet")
-        # accelnet_domain_participant = DomainParticipant()
-        # accelnet_topic = Topic(accelnet_domain_participant, "AccelNet", Sequence)
-        # self.accelnet_reader = DataReader(accelnet_domain_participant, accelnet_topic, listener=accelnet_listener, qos=qos)
+        mic_spectrogram_listener = LivelinessListener(topic_name="MicManipSpectrogram")
+        mic_spectrogram_domain_participant = DomainParticipant()
+        mic_spectrogram_topic = Topic(mic_spectrogram_domain_participant, "MicManipSpectrogram", Sequence)
+        self.mic_spectrogram_reader = DataReader(mic_spectrogram_domain_participant, mic_spectrogram_topic, listener=mic_spectrogram_listener, qos=qos)
+
+        switches_listener = LivelinessListener(topic_name="Switches")
+        switches_domain_participant = DomainParticipant()
+        switches_topic = Topic(switches_domain_participant, "Switches", Sequence)
+        self.switch_reader = DataReader(switches_domain_participant, switches_topic, listener=switches_listener, qos=qos)
 
     def num_dofs(self) -> int:
         """Get the number of joints of the robot.
@@ -148,16 +153,17 @@ class URRobot(Robot):
         pos_quat = self.get_tcp_pose()
         wrench = self.get_FT_readings()
         
-        # fingertips = self.irtouch32_reader.read_one(timeout=duration(seconds=5)).taxel_values
-        # accelerometer = self.accelnet_reader.read_one(timeout=duration(seconds=5)).values[2]  # Only taking the z-axis
+        mic_frame = self.mic_frame_reader.read_one(timeout=duration(seconds=5)).values
+        mic_spectrogram = self.mic_spectrogram_reader.read_one(timeout=duration(seconds=5)).values
+        switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
 
         obs_dict = {
             "joint_positions": joints,
             "tcp_pose_rotvec": pos_quat,
             "wrench": wrench,
-            # "fingertips": fingertips,
-            # "accelerometer": accelerometer,
-           # "microphone": spectogram
+            "switches": switches,
+            "mic_spectrogram": mic_spectrogram,
+            "mic_frame": mic_frame
         }
 
         if self._use_gripper:

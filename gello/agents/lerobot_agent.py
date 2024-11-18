@@ -63,18 +63,17 @@ class LeRobotTactileAgent(Agent):
 
         base_image = obs["base_rgb"]
         wrist_image = obs["wrist_rgb"]
-        #wrist_image = np.zeros((480, 640, 3))# obs["wrist_rgb"]
+        mic_spectrogram = obs["mic_spectrogram"]
         joint_positions = obs["joint_positions"]
-        fingertips = obs["fingertips"]
-        accelerometer = obs["accelerometer"]
+        switches = obs["switches"]
 
-        # fingertips = np.random.randint(25,35,(32,))
-        # fingertips = [16, 35, 40, 34, 31, 15, 39, 38, 44, 8, 22, 35, 49, 38, 11, 26, 33, 28, 6, 24, 27, 28, 25, 30, 32, 26, 26, 27, 31, 28, 18, 24]
-        # accelerometer = 0
+        # Hardcode observations here for ablation
+        # switches = [0, 0]
+        # wrist_image = np.zeros((480, 640, 3))
 
 
         # already contains the gripper position
-        state = np.concatenate([joint_positions, fingertips, [accelerometer]], axis=0)
+        state = np.concatenate([joint_positions, switches], axis=0)
         state = torch.tensor(state).unsqueeze(0).float()
 
         # format to torch tensors
@@ -84,6 +83,7 @@ class LeRobotTactileAgent(Agent):
         formatted_obs = {
             "observation.images.base.rgb": base_image,
             "observation.images.wrist.rgb": wrist_image,
+            "mic_spectrogram": mic_spectrogram,
             "observation.state": state
         }
         action = self.policy.select_action(formatted_obs)

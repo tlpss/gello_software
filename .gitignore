@@ -4,6 +4,8 @@
 # large files
 *.png
 *.gif
+lerobot-outputs/
+third_party/mujoco_menagerie/
 
 # mac
 *.DS_Store
