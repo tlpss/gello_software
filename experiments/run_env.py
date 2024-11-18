@@ -30,7 +30,7 @@ class Args:
     agent: str = "gello"
     robot_port: int = 6001
     wrist_camera_port: int = 5000
-    base_camera_port: int = 5001
+    base_camera_port: int = 5002
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
     hz: int = 10
@@ -39,7 +39,7 @@ class Args:
     gello_port: Optional[str] = None
     mock: bool = False
     use_save_interface: bool = True
-    data_dir: str = "~/bc_data/coffee-handle"
+    data_dir: str = "~/bc_data/highest-point-01"
     bimanual: bool = False
     verbose: bool = False
     no_gripper: bool = False
@@ -52,8 +52,9 @@ def main(args):
     else:
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
-            # "wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+           # "left-wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
+            "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
+           # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
         #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
@@ -91,13 +92,20 @@ def main(args):
                 invert_button=True,
             )
             agent = BimanualAgent(left_agent, right_agent)
+
+        elif args.agent == "policy":
+            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy
+
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
+            policy = load_act_policy(checkpoint_path)
+            agent = LeRobotAgent(policy)
         else:
             raise ValueError(f"Invalid agent name for bimanual: {args.agent}")
 
         # System setup specific. This reset configuration works well on our setup. If you are mounting the robot
         # differently, you need a separate reset joint configuration.
-        reset_joints_left = np.deg2rad([-90, -90, -90, -90, 90, 0, 0])
-        reset_joints_right = np.deg2rad([0, -90, 90, -90, -90, 0, 0])
+        reset_joints_left = np.deg2rad([90, -90, 90, -90, -90, -90, 0])
+        reset_joints_right = np.deg2rad([-90, -90, -90, -90, 90, 90, 0])
         reset_joints = np.concatenate([reset_joints_left, reset_joints_right])
 
         curr_joints = env.get_obs()["joint_positions"]
@@ -123,6 +131,10 @@ def main(args):
                 reset_joints = np.deg2rad(
                     [0, -90, 90, -90, -90, 0, 0]
                 )  # Change this to your own reset joints
+                # reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 0, 0]) # left robot as single arm atm
+
+                reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 90, 0]) # right ar, reset joints
+
 
                 if args.no_gripper:
                     reset_joints = reset_joints[:-1]
@@ -157,9 +169,10 @@ def main(args):
             # policy = load_act_policy(checkpoint_path)
             # agent = LeRobotAgent(policy)
 
-            checkpoint_path = "/home/tlips/Code/gello_software/lerobot-outputs/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
+            #checkpoint_path = "/home/tlips/Code/gello_software/lerobot-outputs/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
             policy = load_act_policy(checkpoint_path)
-            agent = LeRobotTactileAgent(policy)
+            agent = LeRobotAgent(policy)
         else:
             raise ValueError("Invalid agent name")
 
@@ -287,7 +300,12 @@ def main(args):
                 continue  # skip executing the action
             else:
                 raise ValueError(f"Invalid state {state}")
+            
+        before_obs = time.time()
         obs = env.step(action)  # execute action
+        after_obs = time.time()
+        difference = after_obs - before_obs
+        #print(f"env step took {difference} seconds.")
 
 
 if __name__ == "__main__":

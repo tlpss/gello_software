@@ -157,13 +157,13 @@ class URRobot(Robot):
             "wrench": wrench,
             # "fingertips": fingertips,
             # "accelerometer": accelerometer,
+           # "microphone": spectogram
         }
 
         if self._use_gripper:
             gripper_pos = np.array([self.get_joint_state()[-1]])
         else:
             gripper_pos = np.array([self.get_joint_state()[-1]])
-            gripper_pose = np.array([0.0])
         obs_dict["gripper_position"] = gripper_pos
 
         return obs_dict
