@@ -52,8 +52,8 @@ def main(args):
     else:
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
-           # "left-wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
-            "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
+           "left-wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
+           # "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
            # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
         #camera_clients  ={}
@@ -131,9 +131,9 @@ def main(args):
                 reset_joints = np.deg2rad(
                     [0, -90, 90, -90, -90, 0, 0]
                 )  # Change this to your own reset joints
-                # reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 0, 0]) # left robot as single arm atm
+                reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 0, 0]) # left robot as single arm atm
 
-                reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 90, 0]) # right ar, reset joints
+                # reset_joints = np.deg2rad([-90, -90, -90, -90, 90, 90, 0]) # right ar, reset joints
 
 
                 if args.no_gripper:

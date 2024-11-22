@@ -13,7 +13,7 @@ class Args:
     hostname: str = "127.0.0.1"
 
 
-def launch_server(port: int, camera_brand:str, camera_id: int, args: Args):
+def launch_server(port: int, camera_brand:str, camera_id, args: Args):
     if camera_brand == "zed":
         camera = Zed2iCamera(camera_id)
     elif camera_brand == "realsense":
@@ -29,8 +29,8 @@ def launch_server(port: int, camera_brand:str, camera_id: int, args: Args):
 camera_configs = [
     # (brand, serial number, port ID)
    ("realsense", "943222073454", 5000), # left wrist camera
-   ("realsense","817612070315",5001), # right wrist camera,
-   ("zed", 30209878, 5002), # base camera
+   #("realsense","817612070315",5001), # right wrist camera,
+   #("zed", 30209878, 5002), # base camera
      
 ]
 def main(args):
