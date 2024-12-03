@@ -170,7 +170,7 @@ class URRobot(Robot):
             "wrench": wrench,
             "switches": switches,
             "mic_spectrogram": mic_spectrogram,
-            # "mic_frame": mic_frame
+            "mic_frame": mic_frame
         }
 
         if self._use_gripper:
