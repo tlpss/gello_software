@@ -39,7 +39,7 @@ class Args:
     gello_port: Optional[str] = None
     mock: bool = False
     use_save_interface: bool = True
-    data_dir: str = "~/bc_data/highest-point-01"
+    data_dir: str = "~/bc_data/mic-switches"
     bimanual: bool = False
     verbose: bool = False
     no_gripper: bool = False
@@ -54,7 +54,7 @@ def main(args):
             # you can optionally add camera nodes here for imitation learning purposes
            "left-wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
            # "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
-           # "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+           "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
         }
         #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
@@ -143,7 +143,7 @@ def main(args):
             agent = GelloAgent(port=gello_port, start_joints=args.start_joints)
 
             print("-Getting observation for current joints")
-            curr_joints = env.get_obs_DEBUG()["joint_positions"]
+            curr_joints = env.get_obs()["joint_positions"]
             if reset_joints.shape == curr_joints.shape:
                 max_delta = (np.abs(curr_joints - reset_joints)).max()
                 steps = min(int(max_delta / 0.001), 100)
@@ -293,6 +293,12 @@ def main(args):
                 print(f"Saving to {save_path}")
             elif state == "save":
                 assert save_path is not None, "something went wrong"
+                # TODO: this is a wonky place to add an observation, inconsistent with the project architecture, to be improved
+                cropped_base_img = obs['base_rgb'].copy()
+                cropped_base_img[:, 600:] = [0, 0, 0]
+                cropped_base_img[:, :400] = [0, 0, 0]
+                cropped_base_img[:400, :] = [0, 0, 0]
+                obs['base_rgb_cropped'] = cropped_base_img
                 save_frame(save_path, dt, obs, action)
             elif state == "normal":
                 save_path = None

@@ -72,27 +72,6 @@ class RobotEnv:
         observations.update(robot_obs)
         return observations
 
-    def get_obs_DEBUG(self) -> Dict[str, Any]:
-        """Get observation from the environment.
-
-        Returns:
-            obs: observation from the environment.
-        """
-        observations = {}
-        for name, camera in self._camera_dict.items():
-            print(f"---Getting camera img from {name}")
-            image, depth = camera.read()
-            observations[f"{name}_rgb"] = image
-            observations[f"{name}_depth"] = depth
-            print(f"---Got camera img from {name}")
-
-        print(f"---Getting robot observations")
-        robot_obs = self._robot.get_observations()
-        print(f"---Got robot observations")
-        observations.update(robot_obs)
-        return observations
-
-
 def main() -> None:
     pass
 
