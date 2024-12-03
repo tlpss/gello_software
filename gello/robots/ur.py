@@ -153,14 +153,16 @@ class URRobot(Robot):
         pos_quat = self.get_tcp_pose()
         wrench = self.get_FT_readings()
         
+        switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
+        
         mic_frame = self.mic_frame_reader.read_one(timeout=duration(seconds=5)).values
         mic_spectrogram = self.mic_spectrogram_reader.read_one(timeout=duration(seconds=5)).values
         mic_spectrogram = np.array(mic_spectrogram[2:]).reshape((int(mic_spectrogram[0]), int(mic_spectrogram[1])))
-        mic_spectrogram += np.min(mic_spectrogram)  # make all values positive
-        mic_spectrogram = mic_spectrogram/np.max(mic_spectrogram) * 255  # set to 255 scale to appear as grayscale img
+        spectr_minimum = np.min(mic_spectrogram)
+        if spectr_minimum < 0:
+            mic_spectrogram += spectr_minimum  # make all values positive
+        mic_spectrogram = np.clip(mic_spectrogram/110, 0, 1) * 255  # set to 255 scale to appear as grayscale img. 110 dB set as maximum intensity
         mic_spectrogram = np.stack([mic_spectrogram] * 3, axis=-1)  # convert to RGB img
-
-        switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
 
         obs_dict = {
             "joint_positions": joints,
