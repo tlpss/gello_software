@@ -63,16 +63,16 @@ class RobotEnv:
             obs: observation from the environment.
         """
         observations = {}
-        for name, camera in self._camera_dict.items():
+        '''for name, camera in self._camera_dict.items():
             image, depth = camera.read()
             observations[f"{name}_rgb"] = image
-            observations[f"{name}_depth"] = depth
+            observations[f"{name}_depth"] = depth'''
 
         robot_obs = self._robot.get_observations()
         observations.update(robot_obs)
         return observations
 
-    def get_obs_DEBUG(self) -> Dict[str, Any]:
+    '''def get_obs_DEBUG(self) -> Dict[str, Any]:
         """Get observation from the environment.
 
         Returns:
@@ -90,7 +90,7 @@ class RobotEnv:
         robot_obs = self._robot.get_observations()
         print(f"---Got robot observations")
         observations.update(robot_obs)
-        return observations
+        return observations'''
 
 
 def main() -> None:
