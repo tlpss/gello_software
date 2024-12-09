@@ -94,11 +94,11 @@ def main(args):
             agent = BimanualAgent(left_agent, right_agent)
 
         elif args.agent == "policy":
-            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy
+            from gello.agents.lerobot_agent import LeRobotAgent,LeRobotTactileAgent, load_act_policy
 
-            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
             policy = load_act_policy(checkpoint_path)
-            agent = LeRobotAgent(policy)
+            agent = LeRobotTactileAgent(policy)
         else:
             raise ValueError(f"Invalid agent name for bimanual: {args.agent}")
 
@@ -170,9 +170,11 @@ def main(args):
             # agent = LeRobotAgent(policy)
 
             #checkpoint_path = "/home/tlips/Code/gello_software/lerobot-outputs/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
-            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
+            #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
+
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
             policy = load_act_policy(checkpoint_path)
-            agent = LeRobotAgent(policy)
+            agent = LeRobotTactileAgent(policy)
         else:
             raise ValueError("Invalid agent name")
 

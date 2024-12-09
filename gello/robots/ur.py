@@ -9,6 +9,7 @@ from cyclonedds.domain import DomainParticipant
 from cyclonedds.topic import Topic
 from cyclonedds.sub import DataReader
 from cyclonedds.util import duration
+from cyclonedds.core import Policy
 from sensor_comm_dds.utils.liveliness_listener import LivelinessListener
 from sensor_comm_dds.communication.data_classes.irtouch32 import IRTouch32
 from sensor_comm_dds.communication.data_classes.sequence import Sequence
@@ -44,9 +45,7 @@ class URRobot(Robot):
         self._use_gripper = not no_gripper
 
         # Sensor readers
-        qos = dds.qos.Qos()
-        # qos.history.kind = dds.HistoryKind.KEEP_LAST
-        # qos.history.depth = 1
+        qos = dds.qos.Qos([Policy.History.KeepLast(1)])  # Only ever take the last available data published to a topic
         mic_frame_listener = LivelinessListener(topic_name="MicManipFrame")
         mic_frame_domain_participant = DomainParticipant()
         mic_frame_topic = Topic(mic_frame_domain_participant, "MicManipFrame", Sequence)
@@ -56,6 +55,11 @@ class URRobot(Robot):
         mic_spectrogram_domain_participant = DomainParticipant()
         mic_spectrogram_topic = Topic(mic_spectrogram_domain_participant, "MicManipSpectrogram", Sequence)
         self.mic_spectrogram_reader = DataReader(mic_spectrogram_domain_participant, mic_spectrogram_topic, listener=mic_spectrogram_listener, qos=qos)
+
+        wrench_listener = LivelinessListener(topic_name="FTFrame")
+        wrench_domain_participant = DomainParticipant()
+        wrench_topic = Topic(wrench_domain_participant, "FTFrame", Sequence)
+        self.wrench_reader = DataReader(wrench_domain_participant, wrench_topic, listener=wrench_listener, qos=qos)
 
         switches_listener = LivelinessListener(topic_name="Switches")
         switches_domain_participant = DomainParticipant()
@@ -151,7 +155,9 @@ class URRobot(Robot):
     def get_observations(self) -> Dict[str, np.ndarray]:
         joints = self.get_joint_state()
         pos_quat = self.get_tcp_pose()
-        wrench = self.get_FT_readings()
+        
+        wrench = self.wrench_reader.read_one(timeout=duration(seconds=5)).values
+        wrench = np.array(wrench[2:]).reshape((int(wrench[0]), int(wrench[1])))
         
         switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
         
