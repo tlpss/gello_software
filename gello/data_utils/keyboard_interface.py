@@ -4,11 +4,13 @@ NORMAL = (128, 128, 128)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
+BLUE = (0, 0, 255)
 
 KEY_START = pygame.K_s
 KEY_CONTINUE = pygame.K_c
 KEY_QUIT_RECORDING = pygame.K_q
 KEY_PAUSE = pygame.K_p
+KEY_ACTION1 = pygame.K_F1
 
 
 class KBReset:
@@ -32,26 +34,27 @@ class KBReset:
                 print("--------------paused----------------")
                 self._paused = True
                 self._set_color(YELLOW)
-                self._saved = False
                 return "pause"
             else:
                 print("--------------resumed---------------")
                 self._paused = False
                 self._set_color(NORMAL)
-                self._saved = False
                 return "normal"
         if KEY_START in pressed_last:
             self._set_color(GREEN)
             self._saved = True
             return "start"
+        if KEY_ACTION1 in pressed_last:
+            self._set_color(BLUE)
+            return "action1"
         
-        # if no button pressed, maintain state output
+        # some state outputs must be maintained if no key pressed
         if self._paused:
             return "pause"
         if self._saved:
             return "save"
 
-        # defualt state
+        # default state
         self._set_color(NORMAL)
         return "normal"
 

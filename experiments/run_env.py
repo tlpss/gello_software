@@ -1,9 +1,13 @@
 import datetime
-import glob
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Tuple
+from cyclonedds.domain import DomainParticipant
+from cyclonedds.pub import Publisher, DataWriter
+from cyclonedds.topic import Topic
+from sensor_comm_dds.communication.readers.data_publisher import DataPublisher
+from sensor_comm_dds.communication.data_classes.publishable_integer import PublishableInteger
 
 import numpy as np
 import tyro
@@ -59,6 +63,8 @@ def main(args):
         #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
     env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
+    toggle_LED_cmd_publisher = DataPublisher(topic_name="ToggleLEDsCmd", topic_data_type=PublishableInteger)
+
     print("Robot initialized, env created")
     if args.bimanual:
         if args.agent == "gello":
@@ -118,15 +124,17 @@ def main(args):
         if args.agent == "gello":
             gello_port = args.gello_port
             if gello_port is None:
-                usb_ports = glob.glob("/dev/serial/by-id/*")
-                print(f"Found {len(usb_ports)} ports")
-                if len(usb_ports) > 0:
-                    gello_port = usb_ports[0]
-                    print(f"using port {gello_port}")
-                else:
-                    raise ValueError(
-                        "No gello port found, please specify one or plug in gello"
-                    )
+                # hardcode right gello arm 
+                gello_port = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0"
+                # usb_ports = glob.glob("/dev/serial/by-id/*")
+                # print(f"Found {len(usb_ports)} ports")
+                # if len(usb_ports) > 0:
+                #     gello_port = usb_ports[0]
+                #     print(f"using port {gello_port}")
+                # else:
+                #     raise ValueError(
+                #         "No gello port found, please specify one or plug in gello"
+                #     )
             if args.start_joints is None:
                 reset_joints = np.deg2rad(
                     [0, -90, 90, -90, -90, 0, 0]
@@ -171,8 +179,12 @@ def main(args):
 
             #checkpoint_path = "/home/tlips/Code/gello_software/lerobot-outputs/checkpoints/coffee-handle-tactile-chunk60/checkpoints/080000/pretrained_model/"
             #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-08-14/17-04-36_ur5e_act_bimanual-ur5e-highest-point-towel/checkpoints/080000/pretrained_model"
-
-            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
+            
+            # button v1
+            #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
+            
+            # button v2
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-11/22-06-58_ur5e_act_ur5e-act-micro-all/checkpoints/020000/pretrained_model"
             policy = load_act_policy(checkpoint_path)
             agent = LeRobotTactileAgent(policy)
         else:
@@ -306,6 +318,8 @@ def main(args):
                 save_path = None
             elif state == "pause":
                 continue  # skip executing the action
+            elif state == "action1":
+                toggle_LED_cmd_publisher.publish_sensor_data(PublishableInteger(1))
             else:
                 raise ValueError(f"Invalid state {state}")
             
