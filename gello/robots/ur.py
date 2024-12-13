@@ -45,7 +45,7 @@ class URRobot(Robot):
         self._use_gripper = not no_gripper
 
         # Sensor readers
-        qos = dds.qos.Qos([Policy.History.KeepLast(1)])  # Only ever take the last available data published to a topic
+        qos = dds.qos.Qos(Policy.History.KeepLast(1))  # Only ever take the last available data published to a topic
         mic_frame_listener = LivelinessListener(topic_name="MicManipFrame")
         mic_frame_domain_participant = DomainParticipant()
         mic_frame_topic = Topic(mic_frame_domain_participant, "MicManipFrame", Sequence)
@@ -90,6 +90,7 @@ class URRobot(Robot):
         Returns:
             T: The current state of the leader robot.
         """
+        
         robot_joints = np.array(self.r_inter.getActualQ())
         if self._use_gripper:
             gripper_pos = self._get_gripper_pos()
