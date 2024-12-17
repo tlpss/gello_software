@@ -9,4 +9,4 @@
 	url = git@github.com:airo-ugent/airo-mono.git
 [submodule "lerobot"]
 	path = lerobot
-	url = https://github.com/huggingface/lerobot.git
+	url = https://github.com/tlpss/lerobot.git

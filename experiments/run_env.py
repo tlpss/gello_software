@@ -100,7 +100,7 @@ def main(args):
             agent = BimanualAgent(left_agent, right_agent)
 
         elif args.agent == "policy":
-            from gello.agents.lerobot_agent import LeRobotAgent,LeRobotTactileAgent, load_act_policy
+            from gello.agents.lerobot_agent import LeRobotAgent,LeRobotTactileAgent, load_act_policy, load_diffusion_policy
 
             checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
             policy = load_act_policy(checkpoint_path)
@@ -170,7 +170,7 @@ def main(args):
         elif args.agent == "dummy" or args.agent == "none":
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
         elif args.agent == "policy":
-            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy, LeRobotTactileAgent
+            from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy, LeRobotTactileAgent, load_diffusion_policy
 
             #
             # checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-no-tactile/checkpoints/030000/pretrained_model/"
@@ -184,8 +184,17 @@ def main(args):
             #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
             
             # button v2
-            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-11/22-06-58_ur5e_act_ur5e-act-micro-all/checkpoints/020000/pretrained_model"
-            policy = load_act_policy(checkpoint_path)
+            #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-11/22-06-58_ur5e_act_ur5e-act-micro-all/checkpoints/020000/pretrained_model"
+           
+            # button v3 - DP
+            checkpoint_path ="/home/tlips/Code/lerobot/lerobot/outputs/train/2024-12-13/16-10-23_ur5e_diffusion_ur5e-dp-micro-wrist-base-spectrogram/checkpoints/080000/pretrained_model"
+            policy = load_diffusion_policy(checkpoint_path)
+            
+            # button v3 - ACT
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-12/21-52-57_ur5e_act_ur5e-act-micro-all/checkpoints/080000/pretrained_model"
+            # policy = load_act_policy(checkpoint_path)
+            
+            
             agent = LeRobotTactileAgent(policy)
         else:
             raise ValueError("Invalid agent name")
