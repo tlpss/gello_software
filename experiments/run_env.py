@@ -281,6 +281,7 @@ def main(args):
     #safety_controller = URPlanarSafetyController(-0.63,-0.25,-0.53,-0.09,0.01,0.26)
     safety_controller = URTableSimpleSafetyController(z_min=0.0, tcp_z_offset=0.172)
 
+    prev_state = "normal"
     while True:
         num = time.time() - start_time
         message = f"\rTime passed: {round(num, 2)}          "
@@ -305,6 +306,11 @@ def main(args):
         dt = datetime.datetime.now()
         if args.use_save_interface:
             state = kb_interface.update()
+            # actions are evaluated first, previous state is then reset
+            if state == "action1":
+                toggle_LED_cmd_publisher.publish_sensor_data(PublishableInteger(1))
+                state = prev_state
+            prev_state = state
             if state == "start":
                 dt_time = datetime.datetime.now()
                 save_path = (
@@ -326,9 +332,8 @@ def main(args):
             elif state == "normal":
                 save_path = None
             elif state == "pause":
+                env._rate.sleep()
                 continue  # skip executing the action
-            elif state == "action1":
-                toggle_LED_cmd_publisher.publish_sensor_data(PublishableInteger(1))
             else:
                 raise ValueError(f"Invalid state {state}")
             

@@ -18,7 +18,7 @@ class KBReset:
         pygame.init()
         self._screen = pygame.display.set_mode((800, 800))
         self._set_color(NORMAL)
-        self._saved = False
+        self._saving = False
         self._paused = False
 
     def update(self) -> str:
@@ -27,7 +27,7 @@ class KBReset:
         # update and return state
         if KEY_QUIT_RECORDING in pressed_last:
             self._set_color(RED)
-            self._saved = False
+            self._saving = False
             return "normal"
         if KEY_PAUSE in pressed_last:
             if self._paused == False:
@@ -42,7 +42,7 @@ class KBReset:
                 return "normal"
         if KEY_START in pressed_last:
             self._set_color(GREEN)
-            self._saved = True
+            self._saving = True
             return "start"
         if KEY_ACTION1 in pressed_last:
             self._set_color(BLUE)
@@ -50,8 +50,10 @@ class KBReset:
         
         # some state outputs must be maintained if no key pressed
         if self._paused:
+            self._set_color(YELLOW)
             return "pause"
-        if self._saved:
+        if self._saving:
+            self._set_color(GREEN)
             return "save"
 
         # default state
