@@ -7,6 +7,7 @@ import zmq
 
 from gello.robots.robot import Robot
 
+from gello.zmq_core.camera_node import FrameBuffer
 DEFAULT_ROBOT_PORT = 6000
 
 
@@ -26,6 +27,17 @@ class ZMQServerRobot:
         self._timout_message = f"Timeout in Robot Server, Robot: {robot}"
         self._socket.bind(addr)
         self._stop_event = threading.Event()
+
+
+        self.obs_buffer = FrameBuffer(10)
+
+        def read_obs():
+            while not self._stop_event.is_set():
+                obs = self._robot.get_observations()
+                self.obs_buffer.add_frame(obs)
+        self._obs_thread = threading.Thread(target=read_obs)
+        self._obs_thread.start()
+    
 
     def serve(self) -> None:
         """Serve the leader robot state over ZMQ."""
@@ -47,7 +59,7 @@ class ZMQServerRobot:
                 elif method == "command_joint_state":
                     result = self._robot.command_joint_state(**args)
                 elif method == "get_observations":
-                    result = self._robot.get_observations()
+                    result = self.obs_buffer.get_latest_frame()
                 else:
                     result = {"error": "Invalid method"}
                     print(result)
@@ -63,6 +75,7 @@ class ZMQServerRobot:
     def stop(self) -> None:
         """Signal the server to stop serving."""
         self._stop_event.set()
+        self._obs_thread.join()
 
 
 class ZMQClientRobot(Robot):

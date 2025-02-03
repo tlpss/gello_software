@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 import zmq
+import time 
 
 from gello.cameras.camera import CameraDriver
 
@@ -28,18 +29,39 @@ class ZMQClientCamera(CameraDriver):
             T: The current state of the leader robot.
         """
         # pack the image_size and send it to the server
+        start_time = time.time()
         send_message = pickle.dumps(img_size)
         self._socket.send(send_message)
+        received_time = time.time()
         state_dict = pickle.loads(self._socket.recv())
+        unpickle_time = time.time()
+        # print(f"Time to send: {received_time - start_time}")
+        # print(f"Time to unpickle: {unpickle_time - received_time}")
+        # print(f"total time: {unpickle_time - start_time}")
+
         return state_dict
 
-
+class FrameBuffer: 
+    def __init__(self, size: int):
+        self._size = size
+        self._buffer =  [None] * size
+        self._write_idx = 0
+    
+    def add_frame(self, frame):
+        self._buffer[self._write_idx] = frame
+        self._write_idx = (self._write_idx + 1) % self._size
+    def get_latest_frame(self):
+        latest_written_idx = (self._write_idx - 1) % self._size
+        return self._buffer[latest_written_idx]
+    
+        
 class ZMQServerCamera:
     def __init__(
         self,
         camera: CameraDriver,
         port: int = DEFAULT_CAMERA_PORT,
         host: str = "127.0.0.1",
+        img_size: Optional[Tuple[int, int]] = None,
     ):
         self._camera = camera
         self._context = zmq.Context()
@@ -51,6 +73,17 @@ class ZMQServerCamera:
         self._socket.bind(addr)
         self._stop_event = threading.Event()
 
+        # create ring buffer for images
+        self._ring_buffer = FrameBuffer(size=3)
+        # start camera readout thread
+
+        def camera_readout():
+            while not self._stop_event.is_set():
+                camera_read = self._camera.read()
+                self._ring_buffer.add_frame(camera_read)
+        self._camera_thread = threading.Thread(target=camera_readout)
+        self._camera_thread.start()
+
     def serve(self) -> None:
         """Serve the leader robot state over ZMQ."""
         self._socket.setsockopt(zmq.RCVTIMEO, 1000)  # Set timeout to 1000 ms
@@ -58,7 +91,9 @@ class ZMQServerCamera:
             try:
                 message = self._socket.recv()
                 img_size = pickle.loads(message)
-                camera_read = self._camera.read(img_size)
+                camera_read = self._ring_buffer.get_latest_frame()
+                # serialize the img 
+                img,depth = camera_read
                 self._socket.send(pickle.dumps(camera_read))
             except zmq.Again:
                 print(self._timout_message)
@@ -67,3 +102,5 @@ class ZMQServerCamera:
     def stop(self) -> None:
         """Signal the server to stop serving."""
         self._stop_event.set()
+        # kill the camera thread
+        self._camera_thread.join()

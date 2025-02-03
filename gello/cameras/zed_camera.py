@@ -2,6 +2,7 @@ from gello.cameras.camera import CameraDriver
 from typing import Optional, Tuple
 import numpy as np
 from airo_camera_toolkit.cameras.zed.zed2i import Zed2i
+import cv2
 
 
 class Zed2iCamera(CameraDriver):
@@ -9,7 +10,7 @@ class Zed2iCamera(CameraDriver):
         return f"ZedCamera(device_id={self._device_id})"
 
     def __init__(self, serial_number: Optional[str] = None):
-        self.camera = Zed2i(resolution=Zed2i.RESOLUTION_VGA, fps=30, depth_mode=Zed2i.NONE_DEPTH_MODE, serial_number=serial_number)
+        self.camera = Zed2i(resolution=Zed2i.RESOLUTION_VGA, fps=30, depth_mode=Zed2i.NEURAL_DEPTH_MODE, serial_number=serial_number)
         self._device_id = serial_number
 
 
@@ -28,10 +29,9 @@ class Zed2iCamera(CameraDriver):
             np.ndarray: The color image, shape=(H, W, 3)
             np.ndarray: The depth image, shape=(H, W, 1)
         """
-        import cv2
         color_image = self.camera.get_rgb_image_as_int()
         if self.camera.depth_mode is Zed2i.NONE_DEPTH_MODE:
-            depth_image = np.zeros_like(color_image[..., 0])
+            depth_image = np.zeros_like(color_image[..., 0], dtype=np.float16)
         else:
             depth_image = self.camera._retrieve_depth_image()[..., 0]
 

@@ -7,18 +7,6 @@ from gello.cameras.camera import CameraDriver
 from gello.robots.robot import Robot
 
 
-class Rate:
-    def __init__(self, rate: float):
-        self.last = time.time()
-        self.rate = rate
-
-    def sleep(self) -> None:
-        if self.last + 1.0 / self.rate < time.time():
-            print("Warning: control rate is too slow!")
-        while self.last + 1.0 / self.rate > time.time():
-            time.sleep(0.0001)
-        self.last = time.time()
-
 
 class RobotEnv:
     def __init__(
@@ -28,7 +16,6 @@ class RobotEnv:
         camera_dict: Optional[Dict[str, CameraDriver]] = None,
     ) -> None:
         self._robot = robot
-        self._rate = Rate(control_rate_hz)
         self._camera_dict = {} if camera_dict is None else camera_dict
 
     def robot(self) -> Robot:
@@ -51,13 +38,15 @@ class RobotEnv:
         Returns:
             obs: observation from the environment.
         """
-        assert len(joints) == (
-            self._robot.num_dofs()
-        ), f"input:{len(joints)}, robot:{self._robot.num_dofs()}"
-        self._robot.command_joint_state(joints)
-        self._rate.sleep()
-        #time.sleep(5)
+        self.act(joints)
         return self.get_obs()
+
+    def act(self, action: np.ndarray):
+        assert len(action) == (
+            self._robot.num_dofs()
+        ), f"input:{len(action)}, robot:{self._robot.num_dofs()}"
+        self._robot.command_joint_state(action)
+
 
     def get_obs(self) -> Dict[str, Any]:
         """Get observation from the environment.
@@ -67,16 +56,18 @@ class RobotEnv:
         """
         observations = {}
         import time 
-        print(f"Time before images: {time.time()}")
+        before_img_time = time.time()
         for name, camera in self._camera_dict.items():
-            image, depth = camera.read()
-            observations[f"{name}_rgb"] = image
+            img, depth = camera.read((256, 128)) # lower res -> less (de)serialization overhead..
+            observations[f"{name}_rgb"] = img
             observations[f"{name}_depth"] = depth
-
-        print(f"Time after images: {time.time()}")
+        after_img_time = time.time()
         robot_obs = self._robot.get_observations()
-        print(f"Time after robot obs: {time.time()}")
+        after_robot_time = time.time()
         observations.update(robot_obs)
+
+
+        print(f"observation collection time: {int((after_robot_time - before_img_time) * 1000)} ms, images: {int((after_img_time - before_img_time) * 1000)} ms, robot: {int((after_robot_time - after_img_time) * 1000)} ms")
         return observations
 
 def main() -> None:

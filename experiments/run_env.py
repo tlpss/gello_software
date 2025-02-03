@@ -316,7 +316,20 @@ def main(args):
     prev_state = "normal"
     import cv2
 
+    def precise_wait(t_end: float, slack_time: float=0.01, time_func=time.time):
+        t_start = time_func()
+        t_wait = t_end - t_start
+        if t_wait > 0:
+            t_sleep = t_wait - slack_time
+            if t_sleep > 0:
+                time.sleep(t_sleep)
+            while time_func() < t_end:
+                pass
+        return
+
+    is_paused = False
     while True:
+        loop_start_time = time.time()
         num = time.time() - start_time
         message = f"\rTime passed: {round(num, 2)}          "
         print_color(
@@ -326,16 +339,25 @@ def main(args):
             end="",
             flush=True,
         )
+        print("\n")
 
-        img = obs["wrist-left_rgb"]
-        # convert from torch to numpy img and transpose
-        assert isinstance(img, np.ndarray)
-        cv2.imwrite("wrist_left_rgb.png", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+        # get the observation
+        time_before_obs = time.time()
+        obs = env.get_obs()
+        time_after_obs = time.time()
 
+        # img = obs["wrist-left_rgb"]
+        # # convert from torch to numpy img and transpose
+        # assert isinstance(img, np.ndarray)
+        # cv2.imwrite("wrist_left_rgb.png", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+
+        # get action from agent
         time_before_agent = time.time()
         action = agent.act(obs)
         time_after_agent = time.time()
-        print(f"Agent took {time_after_agent - time_before_agent} seconds.")
+        # fixed sleep to counter difference between 'teleop' vs policy inference time
+        precise_wait(0.004 + time_before_agent) # 4ms inference time 
+
         if args.no_gripper:
             action = action[:-1]
 
@@ -345,7 +367,13 @@ def main(args):
         if args.bimanual:
             action[7:13] = safety_controller(action[7:13],obs["joint_positions"][7:13])
 
+        # apply action 
+        if not is_paused:
+            env.act(action)
+        
+  
         dt = datetime.datetime.now()
+        is_paused = False
         if args.use_save_interface:
             state = kb_interface.update()
             # actions are evaluated first, previous state is then reset
@@ -374,19 +402,20 @@ def main(args):
             elif state == "normal":
                 save_path = None
             elif state == "pause":
-                env._rate.sleep()
-                continue  # skip executing the action
+                is_paused = True
             else:
                 raise ValueError(f"Invalid state {state}")
             
-        before_obs = time.time()
-        obs = env.step(action)  # execute action
-        after_obs = time.time()
-        # show the images in the observation in an opencv window
-        
+        # sleep for remainder of time to keep control rate
+        remaining_time = 1 / args.hz - (time.time() - loop_start_time)
 
-        difference = after_obs - before_obs
-        print(f"Observation took {difference} seconds.")
+        if remaining_time < 0:
+            print("Control rate too slow")
+        else:
+            precise_wait(loop_start_time + 1 / args.hz)
+             
+        
+        print(f"Observation took {int(1000*(time_after_obs - time_before_obs))} ms, agent took {int(1000*(time_after_agent - time_before_agent))} ms")
 
 
 if __name__ == "__main__":
