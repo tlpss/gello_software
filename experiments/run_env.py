@@ -33,8 +33,9 @@ def print_color(*args, color=None, attrs=(), **kwargs):
 class Args:
     agent: str = "gello"
     robot_port: int = 6001
-    wrist_camera_port: int = 5000
-    base_camera_port: int = 5002
+    wrist_left_camera_port: int = 5000
+    scene_front_camera_port: int = 5002
+    scene_right_camera_port: int = 5003
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
     hz: int = 10
@@ -43,7 +44,7 @@ class Args:
     gello_port: Optional[str] = None
     mock: bool = False
     use_save_interface: bool = True
-    data_dir: str = "~/bc_data/mic-switches"
+    data_dir: str = "~/bc_data/pick-cb-v2"
     bimanual: bool = False
     verbose: bool = False
     no_gripper: bool = False
@@ -56,9 +57,10 @@ def main(args):
     else:
         camera_clients = {
             # you can optionally add camera nodes here for imitation learning purposes
-           "left-wrist": ZMQClientCamera(port=args.wrist_camera_port, host=args.hostname),
+           "wrist-left": ZMQClientCamera(port=args.wrist_left_camera_port, host=args.hostname),
            # "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
-           "base": ZMQClientCamera(port=args.base_camera_port, host=args.hostname),
+           "scene-front": ZMQClientCamera(port=args.scene_front_camera_port, host=args.hostname),
+           "scene-right": ZMQClientCamera(port=args.scene_right_camera_port, host=args.hostname),
         }
         #camera_clients  ={}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
@@ -100,11 +102,7 @@ def main(args):
             agent = BimanualAgent(left_agent, right_agent)
 
         elif args.agent == "policy":
-            from gello.agents.lerobot_agent import LeRobotAgent,LeRobotTactileAgent, load_act_policy, load_diffusion_policy
-
-            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-04/16-17-27_ur5e_act_ur5e-act-micro-all/checkpoints/040000/pretrained_model"
-            policy = load_act_policy(checkpoint_path)
-            agent = LeRobotTactileAgent(policy)
+            pass
         else:
             raise ValueError(f"Invalid agent name for bimanual: {args.agent}")
 
@@ -171,7 +169,6 @@ def main(args):
             agent = DummyAgent(num_dofs=robot_client.num_dofs())
         elif args.agent == "policy":
             from gello.agents.lerobot_agent import LeRobotAgent, load_act_policy, LeRobotTactileAgent, load_diffusion_policy
-
             #
             # checkpoint_path = "/home/tlips/Code/gello_software/lerobot-output/checkpoints/coffee-handle-no-tactile/checkpoints/030000/pretrained_model/"
             # policy = load_act_policy(checkpoint_path)
@@ -187,17 +184,51 @@ def main(args):
             #checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-11/22-06-58_ur5e_act_ur5e-act-micro-all/checkpoints/020000/pretrained_model"
            
             # button v3 - DP
-            checkpoint_path ="/home/tlips/Code/lerobot/lerobot/outputs/train/2024-12-13/16-10-23_ur5e_diffusion_ur5e-dp-micro-wrist-base-spectrogram/checkpoints/080000/pretrained_model"
-            policy = load_diffusion_policy(checkpoint_path)
+            # checkpoint_path ="/home/tlips/Code/lerobot/lerobot/outputs/train/2024-12-13/16-10-23_ur5e_diffusion_ur5e-dp-micro-wrist-base-spectrogram/checkpoints/080000/pretrained_model"
+            #policy = load_diffusion_policy(checkpoint_path)
             
             # button v3 - ACT
-            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2024-12-12/21-52-57_ur5e_act_ur5e-act-micro-all/checkpoints/080000/pretrained_model"
+            #checkpoint_path = "/home/tlips/Code/lerobot/lerobot/outputs/train/2024-12-17/15-52-36_ur5e_act_ur5e-act-micro-all/checkpoints/080000/pretrained_model"
+            
+            # button v4 - ACT
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-22/08-56-48_ur5e_act_ur5e-act-micro-vision-only/checkpoints/080000/pretrained_model"
+
+            # button v4 - ACT trained longer
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-23/12-20-22_ur5e_act_ur5e-act-micro-vision-only/checkpoints/140000/pretrained_model"
             # policy = load_act_policy(checkpoint_path)
             
-            
-            agent = LeRobotTactileAgent(policy)
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-23/16-48-29_ur5e_diffusion_ur5e-dp-micro-image-only/checkpoints/100000/pretrained_model"
+            # policy = load_diffusion_policy(checkpoint_path)
+
+            # pick CB - ACT v1
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-27/17-24-33_ur5e_act_ur5e-act-pick-cb/checkpoints/080000/pretrained_model"
+            # policy = load_act_policy(checkpoint_path)
+
+            # pick CB - ACT v2
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-28/10-50-23_ur5e_act_ur5e-act-pick-cb/checkpoints/070000/pretrained_model"
+            # policy = load_act_policy(checkpoint_path)
+
+
+            # pick CB - DP v3
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-29/15-04-41_ur5e_diffusion_ur5e-dp-pick-cb/checkpoints/100000/pretrained_model"
+            # policy = load_diffusion_policy(checkpoint_path)
+
+            # pick CB - ACT v3
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-29/08-58-50_ur5e_act_ur5e-act-pick-cb/checkpoints/120000/pretrained_model"
+            # policy = load_act_policy(checkpoint_path)
+
+            # Pick CB - ACT v4
+            # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-30/11-58-00_ur5e_act_ur5e-act-pick-cb/checkpoints/150000/pretrained_model"
+            # policy = load_act_policy(checkpoint_path)
+
+            # pick CB - DP v4
+            checkpoint_path = "/home/tlips/Code/gello_software/pretrained_model_2"
+            policy = load_diffusion_policy(checkpoint_path)
+
+            print("num params", sum(p.numel() for p in policy.parameters()))
+            agent = LeRobotAgent(policy)
         else:
-            raise ValueError("Invalid agent name")
+            raise ValueError(f"Invalid agent name: {args.agent}")
 
     if args.use_save_interface:
         from gello.data_utils.keyboard_interface import KBReset
@@ -237,20 +268,21 @@ def main(args):
         joints
     ), f"agent output dim = {len(start_pos)}, but env dim = {len(joints)}"
 
-    max_delta = 1/args.hz
-    for _ in range(25):
-        obs = env.get_obs()
-        command_joints = agent.act(obs)
-        if args.no_gripper:
-            command_joints = command_joints[:-1]
-        current_joints = obs["joint_positions"]
-        delta = command_joints - current_joints
-        max_joint_delta = np.abs(delta).max()
-        if max_joint_delta > max_delta:
-            delta = delta / max_joint_delta * max_delta
-        env.step(current_joints + delta)
+    if args.agent == "gello":
+        max_delta = 1/args.hz
+        for _ in range(25):
+            obs = env.get_obs()
+            command_joints = agent.act(obs)
+            if args.no_gripper:
+                command_joints = command_joints[:-1]
+            current_joints = obs["joint_positions"]
+            delta = command_joints - current_joints
+            max_joint_delta = np.abs(delta).max()
+            if max_joint_delta > max_delta:
+                delta = delta / max_joint_delta * max_delta
+            env.step(current_joints + delta)
+            
         
-    
 
     obs = env.get_obs()
     joints = obs["joint_positions"]
@@ -282,6 +314,8 @@ def main(args):
     safety_controller = URTableSimpleSafetyController(z_min=0.0, tcp_z_offset=0.172)
 
     prev_state = "normal"
+    import cv2
+
     while True:
         num = time.time() - start_time
         message = f"\rTime passed: {round(num, 2)}          "
@@ -292,7 +326,16 @@ def main(args):
             end="",
             flush=True,
         )
+
+        img = obs["wrist-left_rgb"]
+        # convert from torch to numpy img and transpose
+        assert isinstance(img, np.ndarray)
+        cv2.imwrite("wrist_left_rgb.png", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+
+        time_before_agent = time.time()
         action = agent.act(obs)
+        time_after_agent = time.time()
+        print(f"Agent took {time_after_agent - time_before_agent} seconds.")
         if args.no_gripper:
             action = action[:-1]
 
@@ -301,7 +344,6 @@ def main(args):
         action[:6] = safety_controller(action[:6], obs["joint_positions"][:6])
         if args.bimanual:
             action[7:13] = safety_controller(action[7:13],obs["joint_positions"][7:13])
-        # safety controller 
 
         dt = datetime.datetime.now()
         if args.use_save_interface:
@@ -323,11 +365,11 @@ def main(args):
             elif state == "save":
                 assert save_path is not None, "something went wrong"
                 # TODO: this is a wonky place to add an observation, inconsistent with the project architecture, to be improved
-                cropped_base_img = obs['base_rgb'].copy()
-                cropped_base_img[:, 600:] = [0, 0, 0]
-                cropped_base_img[:, :400] = [0, 0, 0]
-                cropped_base_img[:400, :] = [0, 0, 0]
-                obs['base_rgb_cropped'] = cropped_base_img
+                # cropped_base_img = obs['base_rgb'].copy()
+                # cropped_base_img[:, 600:] = [0, 0, 0]
+                # cropped_base_img[:, :400] = [0, 0, 0]
+                # cropped_base_img[:400, :] = [0, 0, 0]
+                # obs['base_rgb_cropped'] = cropped_base_img
                 save_frame(save_path, dt, obs, action)
             elif state == "normal":
                 save_path = None
@@ -340,8 +382,11 @@ def main(args):
         before_obs = time.time()
         obs = env.step(action)  # execute action
         after_obs = time.time()
+        # show the images in the observation in an opencv window
+        
+
         difference = after_obs - before_obs
-        #print(f"env step took {difference} seconds.")
+        print(f"Observation took {difference} seconds.")
 
 
 if __name__ == "__main__":

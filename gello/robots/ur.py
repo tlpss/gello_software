@@ -157,27 +157,27 @@ class URRobot(Robot):
         joints = self.get_joint_state()
         pos_quat = self.get_tcp_pose()
         
-        wrench = self.wrench_reader.read_one(timeout=duration(seconds=5)).values
-        wrench = np.array(wrench[2:]).reshape((int(wrench[0]), int(wrench[1])))
+        # wrench = self.wrench_reader.read_one(timeout=duration(seconds=5)).values
+        # wrench = np.array(wrench[2:]).reshape((int(wrench[0]), int(wrench[1])))
         
-        switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
+        # switches = self.switch_reader.read_one(timeout=duration(seconds=5)).values
         
-        mic_frame = self.mic_frame_reader.read_one(timeout=duration(seconds=5)).values
-        mic_spectrogram = self.mic_spectrogram_reader.read_one(timeout=duration(seconds=5)).values
-        mic_spectrogram = np.array(mic_spectrogram[2:]).reshape((int(mic_spectrogram[0]), int(mic_spectrogram[1])))
-        spectr_minimum = np.min(mic_spectrogram)
-        if spectr_minimum < 0:
-            mic_spectrogram += spectr_minimum  # make all values positive
-        mic_spectrogram = np.clip(mic_spectrogram/110, 0, 1) * 255  # set to 255 scale to appear as grayscale img. 110 dB set as maximum intensity
-        mic_spectrogram = np.stack([mic_spectrogram] * 3, axis=-1)  # convert to RGB img
+        # mic_frame = self.mic_frame_reader.read_one(timeout=duration(seconds=5)).values
+        # mic_spectrogram = self.mic_spectrogram_reader.read_one(timeout=duration(seconds=5)).values
+        # mic_spectrogram = np.array(mic_spectrogram[2:]).reshape((int(mic_spectrogram[0]), int(mic_spectrogram[1])))
+        # spectr_minimum = np.min(mic_spectrogram)
+        # if spectr_minimum < 0:
+        #     mic_spectrogram += spectr_minimum  # make all values positive
+        # mic_spectrogram = np.clip(mic_spectrogram/110, 0, 1) * 255  # set to 255 scale to appear as grayscale img. 110 dB set as maximum intensity
+        # mic_spectrogram = np.stack([mic_spectrogram] * 3, axis=-1)  # convert to RGB img
 
         obs_dict = {
             "joint_positions": joints,
             "tcp_pose_rotvec": pos_quat,
-            "wrench": wrench,
-            "switches": switches,
-            "mic_spectrogram": mic_spectrogram,
-            "mic_frame": mic_frame
+            # "wrench": wrench,
+            # "switches": switches,
+            # "mic_spectrogram": mic_spectrogram,
+            # "mic_frame": mic_frame
         }
 
         if self._use_gripper:
@@ -189,11 +189,20 @@ class URRobot(Robot):
         return obs_dict
 def main():
 
-    robot_ip = "10.42.0.162"
+    robot_ip = "10.42.0.163"
     ur = URRobot(robot_ip, no_gripper=True)
     print(ur)
-    ur.set_freedrive_mode(True)
-    print(ur.get_observations())
+    #ur.set_freedrive_mode(True)
+    #print(ur.get_observations())
+    current_joints = ur.get_joint_state()
+    joints1 = current_joints.copy()
+    joints1[5] = -220*np.pi/180
+    joints2 = current_joints.copy()
+    joints2[5] = -140*np.pi/180  
+
+    while True:
+        ur.robot.moveJ(joints1, speed = 0.2)
+        ur.robot.moveJ(joints2, speed = 0.2)
 
 
 if __name__ == "__main__":

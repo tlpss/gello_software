@@ -26,7 +26,7 @@ class RealSenseCamera(CameraDriver):
         return f"RealSenseCamera(device_id={self._device_id})"
     
     def __init__(self, device_id: Optional[str] = None, flip: bool = False):
-        self.camera = Realsense(fps=15,resolution=(640,480),serial_number=device_id)
+        self.camera = Realsense(fps=15,resolution=Realsense.RESOLUTION_480,serial_number=device_id)
         self._flip = flip
         self._device_id = device_id
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     device_ids = get_device_ids()
     print(f"Found {len(device_ids)} devices")
     print(device_ids)
-    camera = RealSenseCamera(device_id=device_ids[1])
+    camera = RealSenseCamera(device_id=device_ids[0])
     #_debug_read(camera)
     img = camera.read()
     rgb = img[0]

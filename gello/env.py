@@ -13,6 +13,8 @@ class Rate:
         self.rate = rate
 
     def sleep(self) -> None:
+        if self.last + 1.0 / self.rate < time.time():
+            print("Warning: control rate is too slow!")
         while self.last + 1.0 / self.rate > time.time():
             time.sleep(0.0001)
         self.last = time.time()
@@ -54,6 +56,7 @@ class RobotEnv:
         ), f"input:{len(joints)}, robot:{self._robot.num_dofs()}"
         self._robot.command_joint_state(joints)
         self._rate.sleep()
+        #time.sleep(5)
         return self.get_obs()
 
     def get_obs(self) -> Dict[str, Any]:
@@ -63,12 +66,16 @@ class RobotEnv:
             obs: observation from the environment.
         """
         observations = {}
+        import time 
+        print(f"Time before images: {time.time()}")
         for name, camera in self._camera_dict.items():
             image, depth = camera.read()
             observations[f"{name}_rgb"] = image
             observations[f"{name}_depth"] = depth
 
+        print(f"Time after images: {time.time()}")
         robot_obs = self._robot.get_observations()
+        print(f"Time after robot obs: {time.time()}")
         observations.update(robot_obs)
         return observations
 

@@ -30,7 +30,8 @@ camera_configs = [
     # (brand, serial number, port ID)
    ("realsense", "944122073290", 5000), # left wrist camera
    #("realsense","817612070315",5001), # right wrist camera,
-   ("zed", 30209878, 5002), # base camera
+   ("zed", 30209878, 5002), # scene front camera
+   ("zed",35357320,5003)
      
 ]
 def main(args):
