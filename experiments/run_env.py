@@ -221,8 +221,8 @@ def main(args):
             # checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-01-30/11-58-00_ur5e_act_ur5e-act-pick-cb/checkpoints/150000/pretrained_model"
             # policy = load_act_policy(checkpoint_path)
 
-            # pick CB - DP v4
-            checkpoint_path = "/home/tlips/Code/gello_software/pretrained_model_2"
+            # pick CB - DP v5
+            checkpoint_path = "/home/tlips/Code/lerobot/outputs/train/2025-02-03/16-10-02_ur5e_diffusion_ur5e-dp-pick-cb/checkpoints/100000/pretrained_model"
             policy = load_diffusion_policy(checkpoint_path)
 
             print("num params", sum(p.numel() for p in policy.parameters()))

@@ -195,10 +195,11 @@ def main():
     #ur.set_freedrive_mode(True)
     #print(ur.get_observations())
     current_joints = ur.get_joint_state()
+    print(current_joints)
     joints1 = current_joints.copy()
-    joints1[5] = -220*np.pi/180
+    joints1[5] = 220*np.pi/180
     joints2 = current_joints.copy()
-    joints2[5] = -140*np.pi/180  
+    joints2[5] = 140*np.pi/180  
 
     while True:
         ur.robot.moveJ(joints1, speed = 0.2)

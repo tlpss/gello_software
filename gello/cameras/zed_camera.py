@@ -10,7 +10,7 @@ class Zed2iCamera(CameraDriver):
         return f"ZedCamera(device_id={self._device_id})"
 
     def __init__(self, serial_number: Optional[str] = None):
-        self.camera = Zed2i(resolution=Zed2i.RESOLUTION_VGA, fps=30, depth_mode=Zed2i.NEURAL_DEPTH_MODE, serial_number=serial_number)
+        self.camera = Zed2i(resolution=Zed2i.RESOLUTION_VGA, fps=30, depth_mode=Zed2i.NONE_DEPTH_MODE, serial_number=serial_number)
         self._device_id = serial_number
 
 
@@ -59,11 +59,5 @@ if __name__ == "__main__":
     # save
     cv2.imwrite("background.png",image_bgr)
 
-    while True:
-        image_rgb, depth = camera.read()
-        image_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
-        cv2.imshow("image", image_bgr)
-        cv2.imshow("depth", depth)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-
+    # print intrinsics
+    print(camera.camera.intrinsics_matrix())

@@ -39,9 +39,20 @@ class LeRobotAgent(Agent):
         state = torch.tensor(joint_positions).unsqueeze(0).float()
 
         # format to torch tensors
-        wrist_image = torch.tensor(wrist_image).permute(2, 0, 1).unsqueeze(0).float() / 255
-        scene_right_image = torch.tensor(scene_right_image).permute(2, 0, 1).unsqueeze(0).float() / 255
-        scene_front_image = torch.tensor(scene_front_image).permute(2, 0, 1).unsqueeze(0).float() / 255
+        wrist_image = torch.tensor(wrist_image)
+        scene_right_image = torch.tensor(scene_right_image)
+        scene_front_image = torch.tensor(scene_front_image)
+
+        # move to GPU
+        wrist_image = wrist_image.to("cuda")
+        scene_right_image = scene_right_image.to("cuda")
+        scene_front_image = scene_front_image.to("cuda")
+        state = state.to("cuda")
+
+        # permute and change to float
+        wrist_image = wrist_image.permute(2, 0, 1).unsqueeze(0).float() / 255
+        scene_right_image = scene_right_image.permute(2, 0, 1).unsqueeze(0).float() / 255
+        scene_front_image = scene_front_image.permute(2, 0, 1).unsqueeze(0).float() / 255
 
         # resize
         from torchvision.transforms import Resize, InterpolationMode
@@ -51,12 +62,6 @@ class LeRobotAgent(Agent):
         scene_right_image = resizer(scene_right_image)
         scene_front_image = resizer(scene_front_image)
 
-        # save scene front image as png
-        from PIL import Image
-        scene_front_image_PIL = scene_front_image.squeeze().permute(1,2,0).detach().cpu().numpy()
-        scene_front_image_PIL = (scene_front_image_PIL * 255).astype(np.uint8)
-        scene_front_image_PIL = Image.fromarray(scene_front_image_PIL)
-        scene_front_image_PIL.save("scene_front_image.png")
       
         formatted_obs = {
             "observation.images.wrist-left.rgb": wrist_image,
@@ -65,14 +70,11 @@ class LeRobotAgent(Agent):
             "observation.state": state
         }
 
-        # all observations to policy device
-        for key in formatted_obs:
-            formatted_obs[key] = formatted_obs[key].to("cuda")
-
         import time 
-        print(f"time before policy: {time.time()}")
+        print("inference")
+        print(time.time())
         action = self.policy.select_action(formatted_obs)
-        print(f"time after policy: {time.time()}")
+        print(time.time())
 
         action = action.squeeze().detach().cpu().numpy()
 
