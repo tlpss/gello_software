@@ -33,9 +33,9 @@ def print_color(*args, color=None, attrs=(), **kwargs):
 class Args:
     agent: str = "gello"
     robot_port: int = 6001
-    wrist_left_camera_port: int = 5000
-    scene_front_camera_port: int = 5002
-    scene_right_camera_port: int = 5003
+    #wrist_left_camera_port: int = 5000
+    #scene_front_camera_port: int = 5002
+    #scene_right_camera_port: int = 5003
     hostname: str = "127.0.0.1"
     robot_type: str = None  # only needed for quest agent or spacemouse agent
     hz: int = 10
@@ -55,17 +55,15 @@ def main(args):
         robot_client = PrintRobot(8, dont_print=True)
         camera_clients = {}
     else:
-        camera_clients = {
+        camera_clients = None #{
             # you can optionally add camera nodes here for imitation learning purposes
-           "wrist-left": ZMQClientCamera(port=args.wrist_left_camera_port, host=args.hostname),
+           #"wrist-left": ZMQClientCamera(port=args.wrist_left_camera_port, host=args.hostname),
            # "right-wrist": ZMQClientCamera(port=5001, host=args.hostname),
-           "scene-front": ZMQClientCamera(port=args.scene_front_camera_port, host=args.hostname),
-           "scene-right": ZMQClientCamera(port=args.scene_right_camera_port, host=args.hostname),
-        }
-        #camera_clients  ={}
+           #"scene-front": ZMQClientCamera(port=args.scene_front_camera_port, host=args.hostname),
+           #"scene-right": ZMQClientCamera(port=args.scene_right_camera_port, host=args.hostname),
+        #}
         robot_client = ZMQClientRobot(port=args.robot_port, host=args.hostname)
     env = RobotEnv(robot_client, control_rate_hz=args.hz, camera_dict=camera_clients)
-    toggle_LED_cmd_publisher = DataPublisher(topic_name="ToggleLEDsCmd", topic_data_type=PublishableInteger)
 
     print("Robot initialized, env created")
     if args.bimanual:
@@ -124,15 +122,6 @@ def main(args):
             if gello_port is None:
                 # hardcode right gello arm 
                 gello_port = "/dev/serial/by-id/usb-FTDI_USB__-__Serial_Converter_FT792DZ5-if00-port0"
-                # usb_ports = glob.glob("/dev/serial/by-id/*")
-                # print(f"Found {len(usb_ports)} ports")
-                # if len(usb_ports) > 0:
-                #     gello_port = usb_ports[0]
-                #     print(f"using port {gello_port}")
-                # else:
-                #     raise ValueError(
-                #         "No gello port found, please specify one or plug in gello"
-                #     )
             if args.start_joints is None:
                 reset_joints = np.deg2rad(
                     [0, -90, 90, -90, -90, 0, 0]
@@ -378,7 +367,6 @@ def main(args):
             state = kb_interface.update()
             # actions are evaluated first, previous state is then reset
             if state == "action1":
-                toggle_LED_cmd_publisher.publish_sensor_data(PublishableInteger(1))
                 state = prev_state
             prev_state = state
             if state == "start":
@@ -392,12 +380,6 @@ def main(args):
                 print(f"Saving to {save_path}")
             elif state == "save":
                 assert save_path is not None, "something went wrong"
-                # TODO: this is a wonky place to add an observation, inconsistent with the project architecture, to be improved
-                # cropped_base_img = obs['base_rgb'].copy()
-                # cropped_base_img[:, 600:] = [0, 0, 0]
-                # cropped_base_img[:, :400] = [0, 0, 0]
-                # cropped_base_img[:400, :] = [0, 0, 0]
-                # obs['base_rgb_cropped'] = cropped_base_img
                 save_frame(save_path, dt, obs, action)
             elif state == "normal":
                 save_path = None

@@ -56,12 +56,14 @@ class RobotEnv:
         """
         observations = {}
         import time 
+        print("Getting camera observations")
         before_img_time = time.time()
         for name, camera in self._camera_dict.items():
             img, depth = camera.read((256, 128)) # lower res -> less (de)serialization overhead..
             observations[f"{name}_rgb"] = img
             observations[f"{name}_depth"] = depth
         after_img_time = time.time()
+        print("Getting robot observations")
         robot_obs = self._robot.get_observations()
         after_robot_time = time.time()
         observations.update(robot_obs)
