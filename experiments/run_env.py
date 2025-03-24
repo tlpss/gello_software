@@ -28,7 +28,7 @@ def print_color(*args, color=None, attrs=(), **kwargs):
 @dataclass
 class Args:
     agent: str = "gello"
-    robot_port: int = 6002
+    robot_port: int = 6003
     wrist_camera_port: int = 5000
     base_camera_port: int = 5002
     hostname: str = "127.0.0.1"
