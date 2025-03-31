@@ -10,7 +10,7 @@ from gello.zmq_core.robot_node import ZMQServerRobot
 @dataclass
 class Args:
     robot: str = "ur"
-    robot_port: int = 6003
+    robot_port: int = 6002
     hostname: str = "127.0.0.1"
     robot_ip: str = "10.42.0.162"
     left_robot_ip: str = "10.42.0.163"
